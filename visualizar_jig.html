@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informações GerHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .icon {
+            font-size: 28px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .info-section {
+            margin-bottom: 30px;
+        }
+
+        .info-section h2 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 2px solid #FFA500;
+            padding-bottom: 8px;
+        }
+
+        .info-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            width: fit-content;
+        }
+
+        .status-ativo {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .status-sem-uso {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .status-danificado {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .status-vencendo {
+            background-color: #FFA500;
+            color: white;
+        }
+
+        .alert-box {
+            background-color: #FFF3CD;
+            border-left: 4px solid #FFA500;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .alert-box p {
+            color: #856404;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .qr-section img {
+            max-width: 200px;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 600px) {
+            .info-group {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="icon">📋</span>
+                GERHUB INVENTÁRIO DE JIGs
+            </h1>
+            <p id="status-header">Carregando dados...</p>
+        </div>
+
+        <div class="content" id="content">
+            <div class="loading">Carregando informações do JIG...</div>
+        </div>
+
+        <div class="footer">
+            <p>Gerhub Gerenciamento de JIGs - Gertec</p>
+            <p id="timestamp"></p>
+        </div>
+    </div>
+
+    <script>
+        // Função para extrair parâmetros da URL
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return decodeURIComponent(urlParams.get(param) || '');
+        }
+
+        // Função para formatar data
+        function formatarData(data) {
+            if (!data) return 'N/A';
+            const d = new Date(data);
+            return d.toLocaleDateString('pt-BR');
+        }
+
+        // Função para determinar classe de status
+        function getStatusClass(status) {
+            switch (status.toLowerCase()) {
+                case 'em uso':
+                    return 'status-ativo';
+                case 'sem uso':
+                    return 'status-sem-uso';
+                case 'danificado':
+                    return 'status-danificado';
+                default:
+                    return 'status-ativo';
+            }
+        }
+
+        // Carregar dados da URL
+        function carregarDados() {
+            const jigaID = getQueryParam('id');
+            const tipo = getQueryParam('tipo');
+            const modelo = getQueryParam('modelo');
+            const funcao = getQueryParam('funcao');
+            const site = getQueryParam('site');
+            const lugarUso = getQueryParam('lugaruso');
+            const status = getQueryParam('status');
+            const slots = getQueryParam('slots');
+            const dataRecebimento = getQueryParam('data');
+
+            // Se não houver dados, exibir erro
+            if (!jigaID) {
+                document.getElementById('content').innerHTML = `
+                    <div class="error-message">
+                        <strong>Erro:</strong> Nenhum JIG foi especificado. Por favor, escaneie um QR Code válido.
+                    </div>
+                `;
+                return;
+            }
+
+            // Montar o HTML com os dados
+            const html = `
+                <div class="info-section">
+                    <h2>📦 Identificação do Dispositivo</h2>
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="info-label">Identificação</span>
+                            <span class="info-value">${jigaID}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tipo</span>
+                            <span class="info-value">${tipo || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="info-label">Modelo</span>
+                            <span class="info-value">${modelo || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Função</span>
+                            <span class="info-value">${funcao || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h2>📍 Localização</h2>
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="info-label">Site</span>
+                            <span class="info-value">${site || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Local de Uso</span>
+                            <span class="info-value">${lugarUso || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h2>⚙️ Especificações</h2>
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="info-label">Quantidade de Slots</span>
+                            <span class="info-value">${slots || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Data de Recebimento</span>
+                            <span class="info-value">${formatarData(dataRecebimento)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h2>✅ Status</h2>
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="info-label">Status Atual</span>
+                            <span class="status-badge ${getStatusClass(status)}">${status || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = html;
+            document.getElementById('status-header').textContent = `Status atual: ${status || 'Não definido'}`;
+        }
+
+        // Atualizar timestamp
+        function atualizarTimestamp() {
+            const agora = new Date();
+            const formato = agora.toLocaleString('pt-BR');
+            document.getElementById('timestamp').textContent = `Gerado em: ${formato}`;
+        }
+
+        // Executar ao carregar a página
+        window.addEventListener('load', function() {
+            carregarDados();
+            atualizarTimestamp();
+        });
+    </script>
+</body>
+</html>
